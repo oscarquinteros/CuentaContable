@@ -1,6 +1,6 @@
-package ejemplojdbc;
+package cuentacontable;
 
-import ejemplojdbc.excepciones.SaldoInsuficienteException;
+import cuentacontable.excepciones.SaldoInsuficienteException;
 
 public class Cuenta {
     private String numero;
@@ -20,12 +20,10 @@ public class Cuenta {
             throw new SaldoInsuficienteException("Saldo insuficiente cuenta: "+numero+" faltan:"+resto);
         }
         saldo=saldo-importe;        
-        System.out.println("Debitando cuenta "+numero);
         return saldo;
     }
     public Float acreditar(Float importe){
         saldo=saldo+importe;
-        System.out.println("Acreditando cuenta "+numero);
         return saldo;
     }        
     public String getNumero() {
@@ -45,5 +43,8 @@ public class Cuenta {
     }
     public void setSaldo(Float saldo) {
         this.saldo = saldo;
+    }
+    public String toString(){
+        return this.getNumero()+" "+this.getNombre();
     }
 }

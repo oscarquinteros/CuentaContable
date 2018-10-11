@@ -1,4 +1,4 @@
-package ejemplojdbc.persistencia;
+package cuentacontable.persistencia;
 
 import java.sql.*;
 

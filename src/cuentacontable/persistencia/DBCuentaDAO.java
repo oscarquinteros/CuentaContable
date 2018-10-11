@@ -1,30 +1,41 @@
-package ejemplojdbc.persistencia;
+package cuentacontable.persistencia;
 
-import ejemplojdbc.Cuenta;
-import ejemplojdbc.excepciones.DataAccessException;
+import cuentacontable.Cuenta;
+import cuentacontable.excepciones.CuentaExistenteException;
+import cuentacontable.excepciones.CuentaInexistenteException;
+import cuentacontable.excepciones.DataAccessException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class CuentaDAO {
-    public void delete(String vnumero) throws DataAccessException {
+public class DBCuentaDAO implements ICuentaDAO{
+    @Override
+    public void delete(String numero) {
         try {
+            Cuenta cuenta = findByPK(numero);
+            if (cuenta==null){
+               throw new CuentaInexistenteException("Cuenta inexistente: " + numero);
+            }            
             Connection con = BaseDeDatos.getInstance();
             Statement smt = con.createStatement();
-            smt.executeUpdate("Delete from cuenta where numero='"+vnumero+"'");
+            smt.executeUpdate("Delete from cuenta where numero='"+numero.trim()+"'");
             smt.close();
-        } catch (Exception e) {
-            throw new DataAccessException("Error en CuentaDAO.delete() "+e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Error en DBCuentaDAO.delete() "+e);
+        } catch (ClassNotFoundException e) {
+            throw new DataAccessException("Error en DBCuentaDAO.delete() "+e);
         }
     }
-    public Cuenta findByPK(String vnumero) throws DataAccessException {
+    @Override
+    public Cuenta findByPK(String numero) {
          try {
             Connection con = BaseDeDatos.getInstance();
             Statement smt = con.createStatement();
-            ResultSet result = smt.executeQuery("Select * from cuenta where numero='"+vnumero+"'");            
+            ResultSet result = smt.executeQuery("Select * from cuenta where numero='"+numero.trim()+"'");            
             Cuenta cuenta = null;
             while (result.next())  {
                 cuenta = new Cuenta();
@@ -35,11 +46,14 @@ public class CuentaDAO {
             result.close();
             smt.close();
             return cuenta;
-        } catch (Exception e) {
-            throw new DataAccessException("Error en CuentaDAO.findByPK() "+e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Error en DBCuentaDAO.findByPK() "+e);
+        } catch (ClassNotFoundException e) {
+            throw new DataAccessException("Error en DBCuentaDAO.findByPK() "+e);
         }
     }
-    public Collection findAll() throws DataAccessException{       
+    @Override
+    public Collection findAll() {       
         try {
             Connection con = BaseDeDatos.getInstance();
             Statement smt = con.createStatement();
@@ -48,23 +62,26 @@ public class CuentaDAO {
             ArrayList array = new ArrayList();
             while (result.next())  {
                 cuenta = new Cuenta();
-                cuenta.setNumero(result.getString("numero"));
-                cuenta.setNombre(result.getString("nombre"));
+                cuenta.setNumero(result.getString("numero").trim());
+                cuenta.setNombre(result.getString("nombre").trim());
                 cuenta.setSaldo(result.getFloat("saldo"));
                 array.add(cuenta);
             }
             result.close();
             smt.close();
             return array;
-        } catch (Exception e) {
-            throw new DataAccessException("Error en CuentaDAO.findAll() "+e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Error en DBCuentaDAO.findAll() "+e);
+        } catch (ClassNotFoundException e) {
+            throw new DataAccessException("Error en DBCuentaDAO.findAll() "+e);
         }        
     }        
-    public void insert(Cuenta insertRecord) throws DataAccessException {
+    @Override
+    public void insert(Cuenta insertRecord) {
         try {
             Cuenta existe = findByPK(insertRecord.getNumero());
             if (existe!=null) {
-                throw new DataAccessException("Cuenta existente en CuentaDAO.insert()");
+                throw new CuentaExistenteException("Cuenta existente " + existe);        
             }
             Connection con = BaseDeDatos.getInstance();
             PreparedStatement smt = con.prepareStatement("Insert into cuenta (numero,nombre,saldo) values (?,?,?)");
@@ -72,11 +89,14 @@ public class CuentaDAO {
             smt.setString(2,insertRecord.getNombre());
             smt.setFloat(3,insertRecord.getSaldo());
             smt.execute();            
-        } catch (Exception e) {
-            throw new DataAccessException("Error en CuentaDAO.insert() "+e);
+        } catch (SQLException e) {
+            throw new DataAccessException("Error en DBCuentaDAO.insert() "+e);
+        } catch (ClassNotFoundException e) {
+            throw new DataAccessException("Error en DBCuentaDAO.insert() "+e);
         }
     }
-    public void update(Cuenta updateRecord) throws DataAccessException {
+    @Override
+    public void update(Cuenta updateRecord) {
        try {
             Connection con = BaseDeDatos.getInstance();
             PreparedStatement smt = con.prepareStatement("Update cuenta set nombre=?,saldo=? where numero=?");
@@ -84,7 +104,9 @@ public class CuentaDAO {
             smt.setFloat(2,updateRecord.getSaldo());
             smt.setString(3,updateRecord.getNumero());               
             smt.execute();                        
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            throw new DataAccessException("Error en CuentaDAO.update() "+e);
+        } catch (ClassNotFoundException e) {
             throw new DataAccessException("Error en CuentaDAO.update() "+e);
         }
     }    
